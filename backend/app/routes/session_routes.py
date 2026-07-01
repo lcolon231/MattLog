@@ -1,4 +1,6 @@
-from fastapi import APIRouter, Depends, status
+import random
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -9,13 +11,26 @@ from ..schemas import TrainingSessionCreate, TrainingSessionRead, TrainingSessio
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 
+def generate_session_id(db: Session) -> int:
+    for _ in range(50):
+        session_id = random.randint(100000, 999999)
+        exists = db.query(TrainingSession.id).filter(TrainingSession.id == session_id).first()
+        if not exists:
+            return session_id
+    raise HTTPException(status_code=500, detail="Could not generate a unique session ID")
+
+
 @router.post("", response_model=TrainingSessionRead, status_code=status.HTTP_201_CREATED)
 def create_session(
     payload: TrainingSessionCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    session = TrainingSession(**payload.model_dump(), user_id=current_user.id)
+    session = TrainingSession(
+        id=generate_session_id(db),
+        **payload.model_dump(),
+        user_id=current_user.id,
+    )
     db.add(session)
     db.commit()
     db.refresh(session)

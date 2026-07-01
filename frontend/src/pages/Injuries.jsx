@@ -1,7 +1,25 @@
+import { useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
+
 import ResourceManager from "../components/ResourceManager.jsx";
 
+const bodyParts = [
+  "Head / face",
+  "Neck",
+  "Shoulder",
+  "Elbow",
+  "Wrist / hand",
+  "Rib / chest",
+  "Back",
+  "Hip / groin",
+  "Knee",
+  "Ankle / foot",
+  "Skin / mat burn",
+  "Other",
+];
+
 const fields = [
-  { name: "body_part", label: "Body part", required: true },
+  { name: "body_part", label: "Body part", type: "select", options: bodyParts, required: true },
   { name: "pain_level", label: "Pain level", type: "number", min: 0, max: 10, defaultValue: 1, required: true },
   { name: "cause", label: "Cause" },
   { name: "training_modification", label: "Training modification", type: "textarea" },
@@ -10,6 +28,13 @@ const fields = [
 ];
 
 export default function Injuries() {
+  const [searchParams] = useSearchParams();
+  const fromSession = searchParams.get("fromSession");
+  const initialValues = useMemo(
+    () => (fromSession ? { cause: `Training session #${fromSession}` } : {}),
+    [fromSession]
+  );
+
   return (
     <ResourceManager
       title="Injuries"
@@ -17,6 +42,8 @@ export default function Injuries() {
       description="Keep small warnings visible before they become long layoffs."
       resource="injuries"
       fields={fields}
+      formNote={fromSession ? "Session saved. Add the injury details now." : ""}
+      initialValues={initialValues}
       emptyText="No injuries logged. Good. Keep listening to your body."
       renderItem={(item) => (
         <>

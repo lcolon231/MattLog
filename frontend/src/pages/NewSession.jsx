@@ -16,6 +16,7 @@ export default function NewSession() {
     notes: "",
     felt_dizzy: false,
     fasted_before_training: false,
+    got_injured: false,
   });
   const [error, setError] = useState("");
 
@@ -31,7 +32,12 @@ export default function NewSession() {
     event.preventDefault();
     setError("");
     try {
-      await api.create("sessions", form);
+      const { got_injured, ...sessionPayload } = form;
+      const session = await api.create("sessions", sessionPayload);
+      if (got_injured) {
+        navigate(`/injuries?fromSession=${session.id}`);
+        return;
+      }
       navigate("/sessions");
     } catch (err) {
       setError(err.message);
@@ -90,9 +96,15 @@ export default function NewSession() {
           />
           <span>Fasted before training</span>
         </label>
+        <label className="checkbox-row">
+          <input name="got_injured" type="checkbox" checked={form.got_injured} onChange={updateField} />
+          <span>I got injured during this session</span>
+        </label>
         <div className="form-actions wide-field">
           <Link className="ghost-button" to="/sessions">Cancel</Link>
-          <button className="primary-button" type="submit">Save session</button>
+          <button className="primary-button" type="submit">
+            {form.got_injured ? "Save session and log injury" : "Save session"}
+          </button>
         </div>
       </form>
     </section>

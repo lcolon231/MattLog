@@ -138,7 +138,7 @@ export default function Sessions() {
               <>
                 <div className="card-main">
                   <div>
-                    <span className="card-date">{session.date}</span>
+                    <span className="card-date">Session #{session.id} / {session.date}</span>
                     <h2>{session.class_type}</h2>
                     <p>{session.techniques_learned || session.notes || "No notes added."}</p>
                   </div>

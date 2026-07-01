@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 
 import { api } from "../api/client.js";
 
-function emptyFromFields(fields) {
+function emptyFromFields(fields, initialValues = {}) {
   return fields.reduce((acc, field) => {
-    acc[field.name] = field.defaultValue ?? (field.type === "checkbox" ? false : "");
+    acc[field.name] =
+      initialValues[field.name] ?? field.defaultValue ?? (field.type === "checkbox" ? false : "");
     return acc;
   }, {});
 }
@@ -99,10 +100,12 @@ export default function ResourceManager({
   description,
   resource,
   fields,
+  formNote,
+  initialValues,
   renderItem,
   emptyText,
 }) {
-  const emptyForm = useMemo(() => emptyFromFields(fields), [fields]);
+  const emptyForm = useMemo(() => emptyFromFields(fields, initialValues), [fields, initialValues]);
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState(null);
@@ -124,6 +127,12 @@ export default function ResourceManager({
   useEffect(() => {
     loadItems();
   }, [resource]);
+
+  useEffect(() => {
+    if (!editingId) {
+      setForm(emptyForm);
+    }
+  }, [editingId, emptyForm]);
 
   function changeField(name, value) {
     setForm((current) => ({ ...current, [name]: value }));
@@ -178,6 +187,7 @@ export default function ResourceManager({
             </button>
           )}
         </div>
+        {formNote && !editingId && <p className="success-message">{formNote}</p>}
         {error && <p className="error-message">{error}</p>}
         <form className="form-grid" onSubmit={handleSubmit}>
           {fields.map((field) => (
