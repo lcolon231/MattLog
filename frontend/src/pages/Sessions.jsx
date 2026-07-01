@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import { api } from "../api/client.js";
@@ -18,16 +18,29 @@ function toForm(session) {
 
 export default function Sessions() {
   const [sessions, setSessions] = useState([]);
+  const [injuries, setInjuries] = useState([]);
   const [editingId, setEditingId] = useState(null);
   const [form, setForm] = useState(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({
+    search: "",
+    intensity: "",
+    startDate: "",
+    endDate: "",
+    injuryOnly: false,
+  });
 
   async function loadSessions() {
     setLoading(true);
     setError("");
     try {
-      setSessions(await api.list("sessions"));
+      const [nextSessions, nextInjuries] = await Promise.all([
+        api.list("sessions"),
+        api.list("injuries"),
+      ]);
+      setSessions(nextSessions);
+      setInjuries(nextInjuries);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -46,6 +59,35 @@ export default function Sessions() {
       [name]: type === "checkbox" ? checked : type === "number" ? Number(value) : value,
     });
   }
+
+  function updateFilter(event) {
+    const { name, type, value, checked } = event.target;
+    setFilters({
+      ...filters,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  }
+
+  const injurySessionIds = useMemo(
+    () => new Set(injuries.filter((injury) => injury.session_id).map((injury) => injury.session_id)),
+    [injuries]
+  );
+
+  const filteredSessions = useMemo(
+    () =>
+      sessions.filter((session) => {
+        const search = filters.search.trim().toLowerCase();
+        const searchable = `${session.techniques_learned || ""} ${session.notes || ""}`.toLowerCase();
+        const matchesSearch = !search || searchable.includes(search);
+        const matchesIntensity = !filters.intensity || session.intensity === filters.intensity;
+        const matchesStart = !filters.startDate || session.date >= filters.startDate;
+        const matchesEnd = !filters.endDate || session.date <= filters.endDate;
+        const matchesInjury = !filters.injuryOnly || injurySessionIds.has(session.id);
+
+        return matchesSearch && matchesIntensity && matchesStart && matchesEnd && matchesInjury;
+      }),
+    [filters, injurySessionIds, sessions]
+  );
 
   async function saveEdit(event) {
     event.preventDefault();
@@ -86,9 +128,52 @@ export default function Sessions() {
       {!loading && sessions.length === 0 && (
         <div className="empty-state">No sessions yet. Add your first class to start the log.</div>
       )}
+      {!loading && sessions.length > 0 && (
+        <section className="panel filter-panel">
+          <label className="wide-field">
+            Search notes or techniques
+            <input
+              name="search"
+              value={filters.search}
+              onChange={updateFilter}
+              placeholder="Armbar, passing, tired..."
+            />
+          </label>
+          <label>
+            Intensity
+            <select name="intensity" value={filters.intensity} onChange={updateFilter}>
+              <option value="">All</option>
+              <option value="light">light</option>
+              <option value="moderate">moderate</option>
+              <option value="hard">hard</option>
+              <option value="competition pace">competition pace</option>
+            </select>
+          </label>
+          <label>
+            From
+            <input name="startDate" type="date" value={filters.startDate} onChange={updateFilter} />
+          </label>
+          <label>
+            To
+            <input name="endDate" type="date" value={filters.endDate} onChange={updateFilter} />
+          </label>
+          <label className="checkbox-row">
+            <input
+              name="injuryOnly"
+              type="checkbox"
+              checked={filters.injuryOnly}
+              onChange={updateFilter}
+            />
+            <span>Injury-related only</span>
+          </label>
+        </section>
+      )}
 
       <section className="item-list">
-        {sessions.map((session) => (
+        {!loading && sessions.length > 0 && filteredSessions.length === 0 && (
+          <div className="empty-state">No sessions match those filters.</div>
+        )}
+        {filteredSessions.map((session) => (
           <article className="log-card" key={session.id}>
             {editingId === session.id ? (
               <form className="form-grid" onSubmit={saveEdit}>
@@ -146,6 +231,7 @@ export default function Sessions() {
                 </div>
                 <div className="tag-row">
                   <span>{session.intensity}</span>
+                  {injurySessionIds.has(session.id) && <span>injury linked</span>}
                   {session.felt_dizzy && <span>dizzy</span>}
                   {session.fasted_before_training && <span>fasted</span>}
                 </div>

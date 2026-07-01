@@ -8,10 +8,18 @@ import StatCard from "../components/StatCard.jsx";
 export default function Dashboard() {
   const { user } = useContext(AuthContext);
   const [stats, setStats] = useState(null);
+  const [injuryAlerts, setInjuryAlerts] = useState([]);
+  const [trainingLoad, setTrainingLoad] = useState(null);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    api.dashboard().then(setStats).catch((err) => setError(err.message));
+    Promise.all([api.dashboard(), api.injuryAlerts(), api.trainingLoad()])
+      .then(([nextStats, nextAlerts, nextLoad]) => {
+        setStats(nextStats);
+        setInjuryAlerts(nextAlerts);
+        setTrainingLoad(nextLoad);
+      })
+      .catch((err) => setError(err.message));
   }, []);
 
   if (error) {
@@ -23,6 +31,12 @@ export default function Dashboard() {
   }
 
   const recent = stats.most_recent_session;
+  const formatChange = (value) => {
+    if (value === null || value === undefined) {
+      return "No baseline last week";
+    }
+    return `${value > 0 ? "+" : ""}${value}% vs last week`;
+  };
 
   return (
     <section className="page-stack">
@@ -46,6 +60,65 @@ export default function Dashboard() {
         <StatCard label="Training hours" value={stats.total_training_hours} detail={`${stats.total_training_minutes} minutes`} />
         <StatCard label="Rolling rounds" value={stats.total_rolling_rounds} detail={`${stats.total_rolling_minutes} minutes`} />
         <StatCard label="Current belt" value={stats.current_belt} detail={`${stats.current_stripes} stripes`} />
+      </section>
+
+      {trainingLoad && (
+        <section className="panel">
+          <div className="panel-heading">
+            <h2>Training load</h2>
+          </div>
+          <div className="load-grid">
+            <div className="load-card">
+              <span>Training minutes</span>
+              <strong>{trainingLoad.training_minutes_this_week}</strong>
+              <small>{formatChange(trainingLoad.training_minutes_change_percent)}</small>
+            </div>
+            <div className="load-card">
+              <span>Rolling minutes</span>
+              <strong>{trainingLoad.rolling_minutes_this_week}</strong>
+              <small>{formatChange(trainingLoad.rolling_minutes_change_percent)}</small>
+            </div>
+            <div className="load-card">
+              <span>Sessions</span>
+              <strong>{trainingLoad.sessions_this_week}</strong>
+              <small>{trainingLoad.sessions_last_week} last week</small>
+            </div>
+            <div className="load-card">
+              <span>Rolling rounds</span>
+              <strong>{trainingLoad.rolling_rounds_this_week}</strong>
+              <small>{trainingLoad.rolling_rounds_last_week} last week</small>
+            </div>
+          </div>
+          {trainingLoad.warning_message && (
+            <p className="notice-message">{trainingLoad.warning_message} Consider adding an easier round or a recovery day.</p>
+          )}
+        </section>
+      )}
+
+      <section className="panel injury-alert-panel">
+        <div className="panel-heading">
+          <h2>Injury alerts</h2>
+          <Link to="/injuries">Manage</Link>
+        </div>
+        {injuryAlerts.length > 0 ? (
+          <div className="injury-alert-list">
+            {injuryAlerts.map((injury) => (
+              <article className="injury-alert" key={injury.id}>
+                <div>
+                  <strong>Active {injury.body_part.toLowerCase()} injury, pain {injury.pain_level}/10</strong>
+                  <p>
+                    {injury.training_modification
+                      ? `Modify training: ${injury.training_modification}`
+                      : "Modify training: keep this visible before hard rounds."}
+                  </p>
+                </div>
+                {injury.session_id && <span>Session #{injury.session_id}</span>}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">No active injuries logged. Keep the warmups honest and carry on.</div>
+        )}
       </section>
 
       <section className="panel">

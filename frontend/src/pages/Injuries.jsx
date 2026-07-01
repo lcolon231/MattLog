@@ -19,6 +19,7 @@ const bodyParts = [
 ];
 
 const fields = [
+  { name: "session_id", label: "Linked session ID", type: "number", placeholder: "Optional" },
   { name: "body_part", label: "Body part", type: "select", options: bodyParts, required: true },
   { name: "pain_level", label: "Pain level", type: "number", min: 0, max: 10, defaultValue: 1, required: true },
   { name: "cause", label: "Cause" },
@@ -31,7 +32,13 @@ export default function Injuries() {
   const [searchParams] = useSearchParams();
   const fromSession = searchParams.get("fromSession");
   const initialValues = useMemo(
-    () => (fromSession ? { cause: `Training session #${fromSession}` } : {}),
+    () =>
+      fromSession
+        ? {
+            session_id: Number(fromSession),
+            cause: `Injured during session #${fromSession}`,
+          }
+        : {},
     [fromSession]
   );
 
@@ -56,6 +63,7 @@ export default function Injuries() {
             <div className="metric-pill">{item.pain_level}/10</div>
           </div>
           <div className="tag-row">
+            {item.session_id && <span>Session #{item.session_id}</span>}
             {item.cause && <span>{item.cause}</span>}
             <span>{item.resolved ? "resolved" : "monitor"}</span>
           </div>

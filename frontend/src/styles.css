@@ -392,6 +392,11 @@ label {
   gap: 0.9rem;
 }
 
+.filter-panel {
+  display: grid;
+  gap: 0.9rem;
+}
+
 .wide-field {
   grid-column: 1 / -1;
 }
@@ -419,6 +424,67 @@ label {
 .item-list {
   display: grid;
   gap: 0.85rem;
+}
+
+.load-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.load-card {
+  display: grid;
+  gap: 0.25rem;
+  min-height: 116px;
+  border: 1px solid rgba(208, 162, 74, 0.18);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+  padding: 1rem;
+}
+
+.load-card span,
+.load-card small {
+  color: var(--muted);
+}
+
+.load-card strong {
+  color: var(--ink);
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.injury-alert-panel {
+  border-color: rgba(216, 93, 93, 0.36);
+}
+
+.injury-alert-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.injury-alert {
+  display: grid;
+  gap: 0.75rem;
+  border: 1px solid rgba(216, 93, 93, 0.28);
+  border-radius: 8px;
+  background: rgba(216, 93, 93, 0.1);
+  padding: 0.9rem;
+}
+
+.injury-alert strong {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.injury-alert p {
+  margin: 0;
+  color: #ffd0d0;
+  line-height: 1.5;
+}
+
+.injury-alert span {
+  color: var(--brass);
+  font-size: 0.82rem;
+  font-weight: 900;
 }
 
 .log-card {
@@ -486,7 +552,8 @@ label {
 }
 
 .error-message,
-.success-message {
+.success-message,
+.notice-message {
   border-radius: 8px;
   margin: 0;
   padding: 0.8rem;
@@ -503,6 +570,34 @@ label {
   border: 1px solid rgba(85, 184, 141, 0.35);
   background: rgba(85, 184, 141, 0.12);
   color: #d1ffea;
+}
+
+.notice-message {
+  margin-top: 1rem;
+  border: 1px solid rgba(208, 162, 74, 0.35);
+  background: rgba(208, 162, 74, 0.12);
+  color: #ffe8ad;
+}
+
+.compact-control {
+  min-width: min(100%, 180px);
+}
+
+.report-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.report-preview {
+  overflow-x: auto;
+  margin: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #0f1214;
+  color: var(--ink);
+  line-height: 1.55;
+  padding: 1rem;
+  white-space: pre-wrap;
 }
 
 @media (min-width: 720px) {
@@ -537,6 +632,10 @@ label {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .filter-panel {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
   .page-heading.with-action,
   .dashboard-hero {
     grid-template-columns: 1fr auto;
@@ -544,6 +643,15 @@ label {
 
   .stat-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .load-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .injury-alert {
+    grid-template-columns: 1fr auto;
+    align-items: start;
   }
 }
 

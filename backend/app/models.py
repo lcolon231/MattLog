@@ -43,6 +43,7 @@ class TrainingSession(Base):
 
     user = relationship("User", back_populates="sessions")
     rolling_rounds = relationship("RollingRound", back_populates="session")
+    injuries = relationship("Injury", back_populates="session", passive_deletes=True)
 
 
 class RollingRound(Base):
@@ -82,6 +83,12 @@ class Injury(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    session_id = Column(
+        Integer,
+        ForeignKey("training_sessions.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
     body_part = Column(String(100), nullable=False)
     pain_level = Column(Integer, nullable=False)
     cause = Column(String(200), nullable=True)
@@ -91,6 +98,7 @@ class Injury(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     user = relationship("User", back_populates="injuries")
+    session = relationship("TrainingSession", back_populates="injuries")
 
 
 class BeltProgress(Base):

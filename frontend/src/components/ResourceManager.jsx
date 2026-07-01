@@ -100,6 +100,9 @@ export default function ResourceManager({
   description,
   resource,
   fields,
+  filters,
+  filterItems,
+  filteredEmptyText,
   formNote,
   initialValues,
   renderItem,
@@ -111,6 +114,10 @@ export default function ResourceManager({
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const visibleItems = useMemo(
+    () => (filterItems ? items.filter(filterItems) : items),
+    [filterItems, items]
+  );
 
   async function loadItems() {
     setLoading(true);
@@ -199,10 +206,15 @@ export default function ResourceManager({
         </form>
       </section>
 
+      {filters}
+
       <section className="item-list">
         {loading && <div className="loading-panel">Loading entries...</div>}
         {!loading && items.length === 0 && <div className="empty-state">{emptyText}</div>}
-        {items.map((item) => (
+        {!loading && items.length > 0 && visibleItems.length === 0 && (
+          <div className="empty-state">{filteredEmptyText || "No entries match those filters."}</div>
+        )}
+        {visibleItems.map((item) => (
           <article className="log-card" key={item.id}>
             {renderItem(item)}
             <div className="card-actions">

@@ -54,6 +54,9 @@ Useful endpoints:
 - `POST /auth/register`
 - `POST /auth/login`
 - `GET /dashboard/stats`
+- `GET /dashboard/injury-alerts`
+- `GET /dashboard/training-load`
+- `GET /reports/coach-summary?days=30`
 
 FastAPI creates tables automatically on startup for local development.
 

@@ -1,12 +1,24 @@
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..deps import apply_updates, get_current_user, get_owned_or_404
-from ..models import Injury, User
+from ..models import Injury, TrainingSession, User
 from ..schemas import InjuryCreate, InjuryRead, InjuryUpdate
 
 router = APIRouter(prefix="/injuries", tags=["injuries"])
+
+
+def validate_session(db: Session, session_id: int | None, user_id: int):
+    if session_id is None:
+        return
+    session = (
+        db.query(TrainingSession)
+        .filter(TrainingSession.id == session_id, TrainingSession.user_id == user_id)
+        .first()
+    )
+    if not session:
+        raise HTTPException(status_code=400, detail="Session does not exist for this user")
 
 
 @router.post("", response_model=InjuryRead, status_code=status.HTTP_201_CREATED)
@@ -15,7 +27,9 @@ def create_injury(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    injury = Injury(**payload.model_dump(), user_id=current_user.id)
+    data = payload.model_dump()
+    validate_session(db, data.get("session_id"), current_user.id)
+    injury = Injury(**data, user_id=current_user.id)
     db.add(injury)
     db.commit()
     db.refresh(injury)
@@ -52,7 +66,10 @@ def update_injury(
     current_user: User = Depends(get_current_user),
 ):
     injury = get_owned_or_404(db, Injury, injury_id, current_user.id)
-    apply_updates(injury, payload.model_dump(exclude_unset=True))
+    updates = payload.model_dump(exclude_unset=True)
+    if "session_id" in updates:
+        validate_session(db, updates.get("session_id"), current_user.id)
+    apply_updates(injury, updates)
     db.commit()
     db.refresh(injury)
     return injury

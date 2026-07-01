@@ -138,6 +138,7 @@ class TechniqueRead(ORMModel, TechniqueBase):
 
 
 class InjuryBase(BaseModel):
+    session_id: Optional[int] = None
     body_part: str
     pain_level: int = Field(ge=0, le=10)
     cause: Optional[str] = None
@@ -151,6 +152,7 @@ class InjuryCreate(InjuryBase):
 
 
 class InjuryUpdate(BaseModel):
+    session_id: Optional[int] = None
     body_part: Optional[str] = None
     pain_level: Optional[int] = Field(default=None, ge=0, le=10)
     cause: Optional[str] = None
@@ -199,3 +201,39 @@ class DashboardStats(BaseModel):
     current_stripes: int
     most_recent_session: Optional[TrainingSessionRead] = None
     sessions_this_week: int
+
+
+class DashboardInjuryAlert(ORMModel):
+    id: int
+    body_part: str
+    pain_level: int
+    training_modification: Optional[str] = None
+    session_id: Optional[int] = None
+    created_at: datetime
+
+
+class TrainingLoadSummary(BaseModel):
+    sessions_this_week: int
+    sessions_last_week: int
+    training_minutes_this_week: int
+    training_minutes_last_week: int
+    rolling_minutes_this_week: int
+    rolling_minutes_last_week: int
+    rolling_rounds_this_week: int
+    rolling_rounds_last_week: int
+    training_minutes_change_percent: Optional[float] = None
+    rolling_minutes_change_percent: Optional[float] = None
+    warning_message: Optional[str] = None
+
+
+class CoachSummary(BaseModel):
+    date_range: str
+    total_sessions: int
+    total_training_minutes: int
+    total_rolling_rounds: int
+    total_rolling_minutes: int
+    active_injuries: list[DashboardInjuryAlert]
+    recent_techniques: list[TechniqueRead]
+    recent_notes: list[str]
+    belt_rank: str
+    stripe_count: int

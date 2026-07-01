@@ -11,6 +11,7 @@ import NewSession from "./pages/NewSession.jsx";
 import Profile from "./pages/Profile.jsx";
 import Progress from "./pages/Progress.jsx";
 import Register from "./pages/Register.jsx";
+import Reports from "./pages/Reports.jsx";
 import Rolling from "./pages/Rolling.jsx";
 import Sessions from "./pages/Sessions.jsx";
 import Techniques from "./pages/Techniques.jsx";
@@ -117,6 +118,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Injuries />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/reports"
+              element={
+                <ProtectedRoute>
+                  <Reports />
                 </ProtectedRoute>
               }
             />
