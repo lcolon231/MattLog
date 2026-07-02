@@ -48,6 +48,32 @@ async function request(path, options = {}) {
   return data;
 }
 
+async function download(path, filename) {
+  const token = getToken();
+  const headers = {};
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}${path}`, { headers });
+
+  if (!response.ok) {
+    const data = await response.json().catch(() => ({}));
+    throw new Error(data.detail || "Download failed");
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+}
+
 export const api = {
   register: (payload) => request("/auth/register", { method: "POST", body: JSON.stringify(payload) }),
   login: (payload) => request("/auth/login", { method: "POST", body: JSON.stringify(payload) }),
@@ -57,6 +83,10 @@ export const api = {
   injuryAlerts: () => request("/dashboard/injury-alerts"),
   trainingLoad: () => request("/dashboard/training-load"),
   coachSummary: (days = 30) => request(`/reports/coach-summary?days=${days}`),
+  timeline: (days = 365) => request(`/reports/timeline?days=${days}`),
+  rollingWeeklyStats: (weeks = 8) => request(`/rolling/stats/weekly?weeks=${weeks}`),
+  downloadCoachCsv: (days = 30) => download(`/reports/coach-summary.csv?days=${days}`, "matlog-coach-summary.csv"),
+  downloadCoachPdf: (days = 30) => download(`/reports/coach-summary.pdf?days=${days}`, "matlog-coach-summary.pdf"),
   list: (resource) => request(`/${resource}`),
   create: (resource, payload) => request(`/${resource}`, { method: "POST", body: JSON.stringify(payload) }),
   update: (resource, id, payload) => request(`/${resource}/${id}`, { method: "PUT", body: JSON.stringify(payload) }),

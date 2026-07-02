@@ -83,6 +83,11 @@ class RollingRoundBase(BaseModel):
     rounds_count: int = Field(gt=0)
     round_length_minutes: int = Field(gt=0)
     total_minutes: Optional[int] = Field(default=None, gt=0)
+    submissions_hit: int = Field(default=0, ge=0)
+    submissions_conceded: int = Field(default=0, ge=0)
+    positions_won: int = Field(default=0, ge=0)
+    positions_lost: int = Field(default=0, ge=0)
+    partner_belt_rank: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -95,6 +100,11 @@ class RollingRoundUpdate(BaseModel):
     rounds_count: Optional[int] = Field(default=None, gt=0)
     round_length_minutes: Optional[int] = Field(default=None, gt=0)
     total_minutes: Optional[int] = Field(default=None, gt=0)
+    submissions_hit: Optional[int] = Field(default=None, ge=0)
+    submissions_conceded: Optional[int] = Field(default=None, ge=0)
+    positions_won: Optional[int] = Field(default=None, ge=0)
+    positions_lost: Optional[int] = Field(default=None, ge=0)
+    partner_belt_rank: Optional[str] = None
     notes: Optional[str] = None
 
 
@@ -105,6 +115,11 @@ class RollingRoundRead(ORMModel):
     rounds_count: int
     round_length_minutes: int
     total_minutes: int
+    submissions_hit: int
+    submissions_conceded: int
+    positions_won: int
+    positions_lost: int
+    partner_belt_rank: Optional[str] = None
     notes: Optional[str] = None
     created_at: datetime
 
@@ -114,6 +129,9 @@ class TechniqueBase(BaseModel):
     category: str
     gi_or_nogi: str
     confidence_level: int = Field(default=1, ge=1, le=5)
+    progress_stage: str = "Learning"
+    needs_reps: bool = True
+    revisit_on: Optional[date] = None
     notes: Optional[str] = None
     last_practiced: Optional[date] = None
 
@@ -127,6 +145,9 @@ class TechniqueUpdate(BaseModel):
     category: Optional[str] = None
     gi_or_nogi: Optional[str] = None
     confidence_level: Optional[int] = Field(default=None, ge=1, le=5)
+    progress_stage: Optional[str] = None
+    needs_reps: Optional[bool] = None
+    revisit_on: Optional[date] = None
     notes: Optional[str] = None
     last_practiced: Optional[date] = None
 
@@ -191,6 +212,90 @@ class BeltProgressRead(ORMModel, BeltProgressBase):
     created_at: datetime
 
 
+class TrainingGoalBase(BaseModel):
+    month: str = Field(pattern=r"^\d{4}-\d{2}$")
+    title: str
+    focus_area: Optional[str] = None
+    target_sessions: Optional[int] = Field(default=None, ge=0)
+    target_rolling_rounds: Optional[int] = Field(default=None, ge=0)
+    notes: Optional[str] = None
+    completed: bool = False
+
+
+class TrainingGoalCreate(TrainingGoalBase):
+    pass
+
+
+class TrainingGoalUpdate(BaseModel):
+    month: Optional[str] = Field(default=None, pattern=r"^\d{4}-\d{2}$")
+    title: Optional[str] = None
+    focus_area: Optional[str] = None
+    target_sessions: Optional[int] = Field(default=None, ge=0)
+    target_rolling_rounds: Optional[int] = Field(default=None, ge=0)
+    notes: Optional[str] = None
+    completed: Optional[bool] = None
+
+
+class TrainingGoalRead(ORMModel, TrainingGoalBase):
+    id: int
+    user_id: int
+    created_at: datetime
+
+
+class PersonalMilestoneBase(BaseModel):
+    milestone_date: date
+    title: str
+    category: str = "personal"
+    notes: Optional[str] = None
+
+
+class PersonalMilestoneCreate(PersonalMilestoneBase):
+    pass
+
+
+class PersonalMilestoneUpdate(BaseModel):
+    milestone_date: Optional[date] = None
+    title: Optional[str] = None
+    category: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class PersonalMilestoneRead(ORMModel, PersonalMilestoneBase):
+    id: int
+    user_id: int
+    created_at: datetime
+
+
+class CompetitionBase(BaseModel):
+    name: str
+    competition_date: date
+    division: Optional[str] = None
+    weight_class: Optional[str] = None
+    result: Optional[str] = None
+    focus_plan: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class CompetitionCreate(CompetitionBase):
+    pass
+
+
+class CompetitionUpdate(BaseModel):
+    name: Optional[str] = None
+    competition_date: Optional[date] = None
+    division: Optional[str] = None
+    weight_class: Optional[str] = None
+    result: Optional[str] = None
+    focus_plan: Optional[str] = None
+    notes: Optional[str] = None
+
+
+class CompetitionRead(ORMModel, CompetitionBase):
+    id: int
+    user_id: int
+    created_at: datetime
+
+
 class DashboardStats(BaseModel):
     total_sessions: int
     total_training_minutes: int
@@ -235,5 +340,25 @@ class CoachSummary(BaseModel):
     active_injuries: list[DashboardInjuryAlert]
     recent_techniques: list[TechniqueRead]
     recent_notes: list[str]
+    goal_of_month: Optional[TrainingGoalRead] = None
+    competitions: list[CompetitionRead] = Field(default_factory=list)
     belt_rank: str
     stripe_count: int
+
+
+class TimelineItem(BaseModel):
+    id: str
+    date: date
+    type: str
+    title: str
+    detail: Optional[str] = None
+
+
+class RollingWeeklyStats(BaseModel):
+    week_start: date
+    rounds_count: int
+    total_minutes: int
+    submissions_hit: int
+    submissions_conceded: int
+    positions_won: int
+    positions_lost: int

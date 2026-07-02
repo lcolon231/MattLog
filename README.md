@@ -1,6 +1,6 @@
 # MatLog
 
-MatLog is a full-stack Brazilian Jiu-Jitsu training tracker. Students can log classes, rolling rounds, techniques, injuries, and belt progress from a mobile-friendly web app.
+MatLog is a full-stack Brazilian Jiu-Jitsu training journal. It helps students connect mat time, technique progress, rolling volume, recovery, injury history, competition days, and long-term progress from a mobile-friendly web app.
 
 ## Tech Stack
 
@@ -56,7 +56,27 @@ Useful endpoints:
 - `GET /dashboard/stats`
 - `GET /dashboard/injury-alerts`
 - `GET /dashboard/training-load`
+- `GET /rolling/stats/weekly`
 - `GET /reports/coach-summary?days=30`
+- `GET /reports/coach-summary.csv?days=30`
+- `GET /reports/coach-summary.pdf?days=30`
+- `GET /reports/timeline?days=365`
+
+## Product Features
+
+- Injury-aware training with session-linked injury logs and dashboard warnings.
+- Technique stages: Learning, Drilling, Live-tested, Reliable.
+- Needs-reps technique sorting and revisit dates.
+- Rolling insights for rounds, minutes, submissions, positions, notes, and partner belt rank.
+- Monthly training goals.
+- Competition mode for plans, divisions, results, and notes.
+- Athlete timeline for first class, promotions, injuries, competitions, and personal milestones.
+- Coach-friendly copy, CSV, and PDF reports.
+- Installable PWA shell for mobile use.
+
+## Supabase Notes
+
+MatLog already reads `DATABASE_URL`, so it can point at a Supabase Postgres connection string for hosting the database. The current app still uses FastAPI JWT auth and SQLAlchemy-owned tables. A full Supabase Auth migration should be done as a dedicated step with project credentials, RLS policies, and auth/session testing.
 
 FastAPI creates tables automatically on startup for local development.
 

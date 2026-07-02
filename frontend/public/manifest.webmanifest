@@ -1,0 +1,17 @@
+{
+  "name": "MatLog",
+  "short_name": "MatLog",
+  "description": "BJJ training journal for mat time, recovery, rolling volume, and long-term progress.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#0c0e10",
+  "theme_color": "#a5332a",
+  "icons": [
+    {
+      "src": "/icons/matlog-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

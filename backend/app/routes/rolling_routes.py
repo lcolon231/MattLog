@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from datetime import date, timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from ..database import get_db
 from ..deps import apply_updates, get_current_user, get_owned_or_404
 from ..models import RollingRound, TrainingSession, User
-from ..schemas import RollingRoundCreate, RollingRoundRead, RollingRoundUpdate
+from ..schemas import RollingRoundCreate, RollingRoundRead, RollingRoundUpdate, RollingWeeklyStats
 
 router = APIRouter(prefix="/rolling", tags=["rolling"])
 
@@ -54,6 +56,50 @@ def list_rolling_rounds(
         .order_by(RollingRound.created_at.desc())
         .all()
     )
+
+
+@router.get("/stats/weekly", response_model=list[RollingWeeklyStats])
+def get_weekly_rolling_stats(
+    weeks: int = Query(default=8, ge=1, le=52),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    today = date.today()
+    current_week_start = today - timedelta(days=today.weekday())
+    first_week_start = current_week_start - timedelta(days=7 * (weeks - 1))
+
+    rolling_rounds = (
+        db.query(RollingRound)
+        .filter(RollingRound.user_id == current_user.id)
+        .all()
+    )
+
+    buckets = {
+        first_week_start + timedelta(days=7 * index): {
+            "week_start": first_week_start + timedelta(days=7 * index),
+            "rounds_count": 0,
+            "total_minutes": 0,
+            "submissions_hit": 0,
+            "submissions_conceded": 0,
+            "positions_won": 0,
+            "positions_lost": 0,
+        }
+        for index in range(weeks)
+    }
+
+    for round_entry in rolling_rounds:
+        round_date = round_entry.session.date if round_entry.session else round_entry.created_at.date()
+        week_start = round_date - timedelta(days=round_date.weekday())
+        if week_start not in buckets:
+            continue
+        buckets[week_start]["rounds_count"] += round_entry.rounds_count
+        buckets[week_start]["total_minutes"] += round_entry.total_minutes
+        buckets[week_start]["submissions_hit"] += round_entry.submissions_hit
+        buckets[week_start]["submissions_conceded"] += round_entry.submissions_conceded
+        buckets[week_start]["positions_won"] += round_entry.positions_won
+        buckets[week_start]["positions_lost"] += round_entry.positions_lost
+
+    return list(buckets.values())
 
 
 @router.get("/{rolling_id}", response_model=RollingRoundRead)

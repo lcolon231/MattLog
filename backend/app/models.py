@@ -24,6 +24,9 @@ class User(Base):
     techniques = relationship("Technique", back_populates="user", cascade="all, delete-orphan")
     injuries = relationship("Injury", back_populates="user", cascade="all, delete-orphan")
     progress_entries = relationship("BeltProgress", back_populates="user", cascade="all, delete-orphan")
+    goals = relationship("TrainingGoal", back_populates="user", cascade="all, delete-orphan")
+    milestones = relationship("PersonalMilestone", back_populates="user", cascade="all, delete-orphan")
+    competitions = relationship("Competition", back_populates="user", cascade="all, delete-orphan")
 
 
 class TrainingSession(Base):
@@ -55,6 +58,11 @@ class RollingRound(Base):
     rounds_count = Column(Integer, nullable=False)
     round_length_minutes = Column(Integer, nullable=False)
     total_minutes = Column(Integer, nullable=False)
+    submissions_hit = Column(Integer, nullable=False, default=0)
+    submissions_conceded = Column(Integer, nullable=False, default=0)
+    positions_won = Column(Integer, nullable=False, default=0)
+    positions_lost = Column(Integer, nullable=False, default=0)
+    partner_belt_rank = Column(String(40), nullable=True)
     notes = Column(Text, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
@@ -71,6 +79,9 @@ class Technique(Base):
     category = Column(String(80), nullable=False)
     gi_or_nogi = Column(String(20), nullable=False)
     confidence_level = Column(Integer, nullable=False, default=1)
+    progress_stage = Column(String(40), nullable=False, default="Learning")
+    needs_reps = Column(Boolean, nullable=False, default=True)
+    revisit_on = Column(Date, nullable=True)
     notes = Column(Text, nullable=True)
     last_practiced = Column(Date, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
@@ -113,3 +124,51 @@ class BeltProgress(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     user = relationship("User", back_populates="progress_entries")
+
+
+class TrainingGoal(Base):
+    __tablename__ = "training_goals"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    month = Column(String(7), nullable=False)
+    title = Column(String(160), nullable=False)
+    focus_area = Column(String(100), nullable=True)
+    target_sessions = Column(Integer, nullable=True)
+    target_rolling_rounds = Column(Integer, nullable=True)
+    notes = Column(Text, nullable=True)
+    completed = Column(Boolean, nullable=False, default=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="goals")
+
+
+class PersonalMilestone(Base):
+    __tablename__ = "personal_milestones"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    milestone_date = Column(Date, nullable=False)
+    title = Column(String(160), nullable=False)
+    category = Column(String(80), nullable=False)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="milestones")
+
+
+class Competition(Base):
+    __tablename__ = "competitions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    name = Column(String(160), nullable=False)
+    competition_date = Column(Date, nullable=False)
+    division = Column(String(120), nullable=True)
+    weight_class = Column(String(80), nullable=True)
+    result = Column(String(120), nullable=True)
+    focus_plan = Column(Text, nullable=True)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="competitions")

@@ -102,6 +102,7 @@ export default function ResourceManager({
   fields,
   filters,
   filterItems,
+  sortItems,
   filteredEmptyText,
   formNote,
   initialValues,
@@ -115,8 +116,11 @@ export default function ResourceManager({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const visibleItems = useMemo(
-    () => (filterItems ? items.filter(filterItems) : items),
-    [filterItems, items]
+    () => {
+      const filtered = filterItems ? items.filter(filterItems) : items;
+      return sortItems ? sortItems(filtered) : filtered;
+    },
+    [filterItems, items, sortItems]
   );
 
   async function loadItems() {

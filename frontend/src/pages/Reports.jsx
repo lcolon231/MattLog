@@ -20,9 +20,14 @@ function buildCoachText(summary) {
 
   const techniques = summary.recent_techniques.length
     ? summary.recent_techniques
-        .map((technique) => `- ${technique.name} (${technique.category}, confidence ${technique.confidence_level}/5)`)
+        .map((technique) => `- ${technique.name} (${technique.category}, ${technique.progress_stage})`)
         .join("\n")
     : "- No recent techniques logged";
+  const competitions = summary.competitions.length
+    ? summary.competitions
+        .map((competition) => `- ${competition.competition_date}: ${competition.name}${competition.result ? `, ${competition.result}` : ""}`)
+        .join("\n")
+    : "- No competition days in this range";
 
   const notes = summary.recent_notes.length
     ? summary.recent_notes.map((note) => `- ${note}`).join("\n")
@@ -41,8 +46,14 @@ Training:
 Active injuries:
 ${injuries}
 
+Goal of the month:
+- ${summary.goal_of_month ? `${summary.goal_of_month.title} (${summary.goal_of_month.focus_area || "general"})` : "No monthly goal set"}
+
 Recent techniques:
 ${techniques}
+
+Competition days:
+${competitions}
 
 Recent notes:
 ${notes}`;
@@ -72,6 +83,24 @@ export default function Reports() {
       setCopied(true);
     } catch {
       setError("Clipboard access is unavailable in this browser.");
+    }
+  }
+
+  async function downloadCsv() {
+    setError("");
+    try {
+      await api.downloadCoachCsv(days);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  async function downloadPdf() {
+    setError("");
+    try {
+      await api.downloadCoachPdf(days);
+    } catch (err) {
+      setError(err.message);
     }
   }
 
@@ -125,9 +154,17 @@ export default function Reports() {
           <section className="panel report-panel">
             <div className="panel-heading">
               <h2>Coach summary</h2>
-              <button className="primary-button compact" type="button" onClick={copySummary}>
-                Copy summary
-              </button>
+              <div className="button-row">
+                <button className="ghost-button compact" type="button" onClick={downloadCsv}>
+                  CSV
+                </button>
+                <button className="ghost-button compact" type="button" onClick={downloadPdf}>
+                  PDF
+                </button>
+                <button className="primary-button compact" type="button" onClick={copySummary}>
+                  Copy summary
+                </button>
+              </div>
             </div>
             {copied && <p className="success-message">Copied summary to clipboard.</p>}
             <pre className="report-preview">{coachText}</pre>

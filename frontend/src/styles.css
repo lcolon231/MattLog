@@ -415,7 +415,8 @@ label {
 }
 
 .form-actions,
-.card-actions {
+.card-actions,
+.button-row {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
@@ -431,7 +432,10 @@ label {
   gap: 0.75rem;
 }
 
-.load-card {
+.load-card,
+.focus-card,
+.week-cell,
+.calendar-card {
   display: grid;
   gap: 0.25rem;
   min-height: 116px;
@@ -442,14 +446,83 @@ label {
 }
 
 .load-card span,
-.load-card small {
+.load-card small,
+.focus-card span,
+.focus-card p,
+.week-cell span,
+.week-cell small,
+.calendar-card span,
+.calendar-card p {
   color: var(--muted);
 }
 
-.load-card strong {
+.load-card strong,
+.focus-card strong,
+.week-cell strong {
   color: var(--ink);
   font-size: 2rem;
   line-height: 1;
+}
+
+.focus-grid,
+.week-strip,
+.calendar-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.focus-card p,
+.calendar-card p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.week-strip {
+  grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+}
+
+.week-cell strong {
+  color: var(--brass);
+}
+
+.timeline-list {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: minmax(92px, 0.24fr) 1fr;
+  gap: 0.8rem;
+  border-left: 3px solid var(--brass);
+  padding: 0.35rem 0 0.35rem 0.85rem;
+}
+
+.timeline-item span {
+  color: var(--brass);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.timeline-item p {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+}
+
+.calendar-card h2 {
+  margin: 0.25rem 0;
+}
+
+.calendar-card.session {
+  border-color: rgba(43, 138, 132, 0.34);
+}
+
+.calendar-card.injury {
+  border-color: rgba(216, 93, 93, 0.34);
+}
+
+.calendar-card.competition {
+  border-color: rgba(208, 162, 74, 0.42);
 }
 
 .injury-alert-panel {
@@ -647,6 +720,11 @@ label {
 
   .load-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .focus-grid,
+  .calendar-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .injury-alert {

@@ -10,14 +10,27 @@ export default function Dashboard() {
   const [stats, setStats] = useState(null);
   const [injuryAlerts, setInjuryAlerts] = useState([]);
   const [trainingLoad, setTrainingLoad] = useState(null);
+  const [goals, setGoals] = useState([]);
+  const [techniques, setTechniques] = useState([]);
+  const [competitions, setCompetitions] = useState([]);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    Promise.all([api.dashboard(), api.injuryAlerts(), api.trainingLoad()])
-      .then(([nextStats, nextAlerts, nextLoad]) => {
+    Promise.all([
+      api.dashboard(),
+      api.injuryAlerts(),
+      api.trainingLoad(),
+      api.list("goals"),
+      api.list("techniques"),
+      api.list("competitions"),
+    ])
+      .then(([nextStats, nextAlerts, nextLoad, nextGoals, nextTechniques, nextCompetitions]) => {
         setStats(nextStats);
         setInjuryAlerts(nextAlerts);
         setTrainingLoad(nextLoad);
+        setGoals(nextGoals);
+        setTechniques(nextTechniques);
+        setCompetitions(nextCompetitions);
       })
       .catch((err) => setError(err.message));
   }, []);
@@ -31,6 +44,15 @@ export default function Dashboard() {
   }
 
   const recent = stats.most_recent_session;
+  const today = new Date().toISOString().slice(0, 10);
+  const currentMonth = today.slice(0, 7);
+  const goalOfMonth = goals.find((goal) => goal.month === currentMonth && !goal.completed);
+  const revisitTechniques = techniques
+    .filter((technique) => technique.needs_reps || (technique.revisit_on && technique.revisit_on <= today))
+    .slice(0, 3);
+  const nextCompetition = competitions
+    .filter((competition) => competition.competition_date >= today)
+    .sort((a, b) => a.competition_date.localeCompare(b.competition_date))[0];
   const formatChange = (value) => {
     if (value === null || value === undefined) {
       return "No baseline last week";
@@ -60,6 +82,34 @@ export default function Dashboard() {
         <StatCard label="Training hours" value={stats.total_training_hours} detail={`${stats.total_training_minutes} minutes`} />
         <StatCard label="Rolling rounds" value={stats.total_rolling_rounds} detail={`${stats.total_rolling_minutes} minutes`} />
         <StatCard label="Current belt" value={stats.current_belt} detail={`${stats.current_stripes} stripes`} />
+      </section>
+
+      <section className="panel">
+        <div className="panel-heading">
+          <h2>Today&apos;s focus</h2>
+          <Link to="/goals">Set goal</Link>
+        </div>
+        <div className="focus-grid">
+          <div className="focus-card">
+            <span>Goal of the month</span>
+            <strong>{goalOfMonth ? goalOfMonth.title : "No active goal"}</strong>
+            <p>{goalOfMonth?.focus_area || "Pick one thing to make training less random."}</p>
+          </div>
+          <div className="focus-card">
+            <span>Techniques to revisit</span>
+            <strong>{revisitTechniques.length}</strong>
+            <p>
+              {revisitTechniques.length
+                ? revisitTechniques.map((technique) => technique.name).join(", ")
+                : "No technique is marked as needing reps."}
+            </p>
+          </div>
+          <div className="focus-card">
+            <span>Competition mode</span>
+            <strong>{nextCompetition ? nextCompetition.competition_date : "Off"}</strong>
+            <p>{nextCompetition?.name || "No upcoming competition logged."}</p>
+          </div>
+        </div>
       </section>
 
       {trainingLoad && (
