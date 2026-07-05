@@ -2,7 +2,24 @@ import { useEffect, useMemo, useState } from "react";
 
 import { api } from "../api/client.js";
 
-function buildCoachText(summary) {
+function buildSubmissionLines(stats) {
+  if (!stats || (stats.total_landed === 0 && stats.total_conceded === 0)) {
+    return "- No submissions logged";
+  }
+
+  const topLanded = stats.top_landed.length
+    ? stats.top_landed.map((entry) => `${entry.technique_name} x${entry.count}`).join(", ")
+    : "none";
+  const topConceded = stats.top_conceded.length
+    ? stats.top_conceded.map((entry) => `${entry.technique_name} x${entry.count}`).join(", ")
+    : "none";
+
+  return `- ${stats.total_landed} landed, ${stats.total_conceded} conceded
+- Landing most: ${topLanded}
+- Getting caught by: ${topConceded}`;
+}
+
+function buildCoachText(summary, submissionStats) {
   if (!summary) {
     return "";
   }
@@ -43,6 +60,9 @@ Training:
 - ${summary.total_rolling_rounds} rolling rounds
 - ${summary.total_rolling_minutes} rolling minutes
 
+Submissions:
+${buildSubmissionLines(submissionStats)}
+
 Active injuries:
 ${injuries}
 
@@ -61,6 +81,7 @@ ${notes}`;
 
 export default function Reports() {
   const [summary, setSummary] = useState(null);
+  const [submissionStats, setSubmissionStats] = useState(null);
   const [days, setDays] = useState(30);
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
@@ -68,13 +89,18 @@ export default function Reports() {
   useEffect(() => {
     setError("");
     setCopied(false);
-    api
-      .coachSummary(days)
-      .then(setSummary)
+    Promise.all([api.coachSummary(days), api.submissionStats(days)])
+      .then(([nextSummary, nextStats]) => {
+        setSummary(nextSummary);
+        setSubmissionStats(nextStats);
+      })
       .catch((err) => setError(err.message));
   }, [days]);
 
-  const coachText = useMemo(() => buildCoachText(summary), [summary]);
+  const coachText = useMemo(
+    () => buildCoachText(summary, submissionStats),
+    [submissionStats, summary]
+  );
 
   async function copySummary() {
     setCopied(false);
@@ -150,6 +176,43 @@ export default function Reports() {
               <small>{summary.stripe_count} stripes</small>
             </div>
           </section>
+
+          {submissionStats && (
+            <section className="panel">
+              <div className="panel-heading">
+                <h2>Submission game</h2>
+              </div>
+              <section className="stat-grid">
+                <div className="stat-card">
+                  <span>Landed</span>
+                  <strong>{submissionStats.total_landed}</strong>
+                  <small>
+                    {submissionStats.top_landed.length
+                      ? `Best: ${submissionStats.top_landed[0].technique_name}`
+                      : "No submissions landed yet"}
+                  </small>
+                </div>
+                <div className="stat-card">
+                  <span>Conceded</span>
+                  <strong>{submissionStats.total_conceded}</strong>
+                  <small>
+                    {submissionStats.top_conceded.length
+                      ? `Watch out for: ${submissionStats.top_conceded[0].technique_name}`
+                      : "Nothing catching you yet"}
+                  </small>
+                </div>
+              </section>
+              {submissionStats.by_opponent_belt.length > 0 && (
+                <div className="tag-row">
+                  {submissionStats.by_opponent_belt.map((entry) => (
+                    <span key={entry.opponent_belt_rank}>
+                      vs {entry.opponent_belt_rank}: {entry.landed} landed / {entry.conceded} conceded
+                    </span>
+                  ))}
+                </div>
+              )}
+            </section>
+          )}
 
           <section className="panel report-panel">
             <div className="panel-heading">

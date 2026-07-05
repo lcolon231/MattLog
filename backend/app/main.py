@@ -13,6 +13,7 @@ from .routes import (
     report_routes,
     rolling_routes,
     session_routes,
+    submission_routes,
     technique_routes,
     user_routes,
 )
@@ -94,6 +95,7 @@ app.include_router(auth_routes.router)
 app.include_router(user_routes.router)
 app.include_router(session_routes.router)
 app.include_router(rolling_routes.router)
+app.include_router(submission_routes.router)
 app.include_router(technique_routes.router)
 app.include_router(injury_routes.router)
 app.include_router(progress_routes.router)
