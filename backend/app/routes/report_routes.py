@@ -1,4 +1,5 @@
 import csv
+from collections import Counter
 from datetime import date, timedelta
 from io import StringIO
 
@@ -13,12 +14,13 @@ from ..models import (
     Injury,
     PersonalMilestone,
     RollingRound,
+    Submission,
     Technique,
     TrainingGoal,
     TrainingSession,
     User,
 )
-from ..schemas import CoachSummary, TimelineItem
+from ..schemas import CoachSummary, SubmissionStats, TimelineItem
 
 router = APIRouter(prefix="/reports", tags=["reports"])
 
@@ -352,3 +354,67 @@ def get_timeline(
             )
 
     return sorted(items, key=lambda item: item["date"], reverse=True)
+
+
+@router.get("/submission-stats", response_model=SubmissionStats)
+def get_submission_stats(
+    days: int = Query(default=30, ge=1, le=365),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    end_date = date.today()
+    start_date = end_date - timedelta(days=days - 1)
+
+    submissions = (
+        db.query(Submission)
+        .filter(Submission.user_id == current_user.id)
+        .all()
+    )
+
+    def submission_date(submission: Submission):
+        if submission.rolling_round and submission.rolling_round.session:
+            return submission.rolling_round.session.date
+        return submission.created_at.date()
+
+    recent = [
+        submission
+        for submission in submissions
+        if start_date <= submission_date(submission) <= end_date
+    ]
+    landed = [submission for submission in recent if submission.result == "landed"]
+    conceded = [submission for submission in recent if submission.result == "conceded"]
+
+    def top_techniques(entries: list[Submission], limit: int = 5):
+        counts = Counter()
+        for entry in entries:
+            counts[entry.technique_name.strip()] += entry.count
+        return [
+            {"technique_name": name, "count": count}
+            for name, count in counts.most_common(limit)
+        ]
+
+    belt_breakdown: dict[str, dict[str, int]] = {}
+    for entry in recent:
+        belt = entry.opponent_belt_rank or "unknown"
+        bucket = belt_breakdown.setdefault(belt, {"landed": 0, "conceded": 0})
+        bucket[entry.result] += entry.count
+
+    return {
+        "date_range": f"{start_date.isoformat()} to {end_date.isoformat()}",
+        "total_landed": sum(entry.count for entry in landed),
+        "total_conceded": sum(entry.count for entry in conceded),
+        "top_landed": top_techniques(landed),
+        "top_conceded": top_techniques(conceded),
+        "by_opponent_belt": [
+            {
+                "opponent_belt_rank": belt,
+                "landed": bucket["landed"],
+                "conceded": bucket["conceded"],
+            }
+            for belt, bucket in sorted(
+                belt_breakdown.items(),
+                key=lambda item: item[1]["landed"] + item[1]["conceded"],
+                reverse=True,
+            )
+        ],
+    }

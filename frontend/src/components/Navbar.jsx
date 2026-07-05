@@ -8,6 +8,7 @@ const links = [
   { to: "/sessions", label: "Sessions" },
   { to: "/techniques", label: "Techniques" },
   { to: "/rolling", label: "Rolling" },
+  { to: "/submissions", label: "Submissions" },
   { to: "/goals", label: "Goals" },
   { to: "/calendar", label: "Calendar" },
   { to: "/competitions", label: "Competitions" },

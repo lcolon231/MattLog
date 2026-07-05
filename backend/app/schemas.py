@@ -1,5 +1,5 @@
 from datetime import date, datetime
-from typing import Optional
+from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
@@ -121,6 +121,34 @@ class RollingRoundRead(ORMModel):
     positions_lost: int
     partner_belt_rank: Optional[str] = None
     notes: Optional[str] = None
+    created_at: datetime
+
+
+class SubmissionBase(BaseModel):
+    rolling_round_id: Optional[int] = None
+    technique_name: str = Field(min_length=1, max_length=160)
+    result: Literal["landed", "conceded"]
+    opponent_belt_rank: Optional[str] = None
+    count: int = Field(default=1, ge=1)
+    notes: Optional[str] = None
+
+
+class SubmissionCreate(SubmissionBase):
+    pass
+
+
+class SubmissionUpdate(BaseModel):
+    rolling_round_id: Optional[int] = None
+    technique_name: Optional[str] = Field(default=None, min_length=1, max_length=160)
+    result: Optional[Literal["landed", "conceded"]] = None
+    opponent_belt_rank: Optional[str] = None
+    count: Optional[int] = Field(default=None, ge=1)
+    notes: Optional[str] = None
+
+
+class SubmissionRead(ORMModel, SubmissionBase):
+    id: int
+    user_id: int
     created_at: datetime
 
 
@@ -329,6 +357,26 @@ class TrainingLoadSummary(BaseModel):
     training_minutes_change_percent: Optional[float] = None
     rolling_minutes_change_percent: Optional[float] = None
     warning_message: Optional[str] = None
+
+
+class SubmissionTechniqueCount(BaseModel):
+    technique_name: str
+    count: int
+
+
+class SubmissionBeltBreakdown(BaseModel):
+    opponent_belt_rank: str
+    landed: int
+    conceded: int
+
+
+class SubmissionStats(BaseModel):
+    date_range: str
+    total_landed: int
+    total_conceded: int
+    top_landed: list[SubmissionTechniqueCount]
+    top_conceded: list[SubmissionTechniqueCount]
+    by_opponent_belt: list[SubmissionBeltBreakdown]
 
 
 class CoachSummary(BaseModel):

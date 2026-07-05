@@ -1,6 +1,6 @@
 # MatLog
 
-MatLog is a full-stack Brazilian Jiu-Jitsu training journal. It helps students connect mat time, technique progress, rolling volume, recovery, injury history, competition days, and long-term progress from a mobile-friendly web app.
+MatLog is a full-stack Brazilian Jiu-Jitsu training journal. It helps students connect mat time, technique progress, rolling volume, submissions, recovery, injury history, competition days, and long-term progress from a mobile-friendly web app.
 
 ## Tech Stack
 
@@ -61,6 +61,7 @@ Useful endpoints:
 - `GET /reports/coach-summary.csv?days=30`
 - `GET /reports/coach-summary.pdf?days=30`
 - `GET /reports/timeline?days=365`
+- `GET /reports/submission-stats?days=30`
 
 ## Product Features
 

@@ -17,6 +17,7 @@ import Register from "./pages/Register.jsx";
 import Reports from "./pages/Reports.jsx";
 import Rolling from "./pages/Rolling.jsx";
 import Sessions from "./pages/Sessions.jsx";
+import Submissions from "./pages/Submissions.jsx";
 import Techniques from "./pages/Techniques.jsx";
 import Timeline from "./pages/Timeline.jsx";
 
@@ -114,6 +115,14 @@ export default function App() {
               element={
                 <ProtectedRoute>
                   <Rolling />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/submissions"
+              element={
+                <ProtectedRoute>
+                  <Submissions />
                 </ProtectedRoute>
               }
             />

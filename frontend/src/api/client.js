@@ -85,6 +85,7 @@ export const api = {
   coachSummary: (days = 30) => request(`/reports/coach-summary?days=${days}`),
   timeline: (days = 365) => request(`/reports/timeline?days=${days}`),
   rollingWeeklyStats: (weeks = 8) => request(`/rolling/stats/weekly?weeks=${weeks}`),
+  submissionStats: (days = 30) => request(`/reports/submission-stats?days=${days}`),
   downloadCoachCsv: (days = 30) => download(`/reports/coach-summary.csv?days=${days}`, "matlog-coach-summary.csv"),
   downloadCoachPdf: (days = 30) => download(`/reports/coach-summary.pdf?days=${days}`, "matlog-coach-summary.pdf"),
   list: (resource) => request(`/${resource}`),

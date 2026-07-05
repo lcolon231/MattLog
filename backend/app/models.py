@@ -27,6 +27,7 @@ class User(Base):
     goals = relationship("TrainingGoal", back_populates="user", cascade="all, delete-orphan")
     milestones = relationship("PersonalMilestone", back_populates="user", cascade="all, delete-orphan")
     competitions = relationship("Competition", back_populates="user", cascade="all, delete-orphan")
+    submissions = relationship("Submission", back_populates="user", cascade="all, delete-orphan")
 
 
 class TrainingSession(Base):
@@ -68,6 +69,7 @@ class RollingRound(Base):
 
     user = relationship("User", back_populates="rolling_rounds")
     session = relationship("TrainingSession", back_populates="rolling_rounds")
+    submissions = relationship("Submission", back_populates="rolling_round", passive_deletes=True)
 
 
 class Technique(Base):
@@ -87,6 +89,28 @@ class Technique(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
     user = relationship("User", back_populates="techniques")
+
+
+class Submission(Base):
+    __tablename__ = "submissions"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    rolling_round_id = Column(
+        Integer,
+        ForeignKey("rolling_rounds.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    technique_name = Column(String(160), nullable=False)
+    result = Column(String(20), nullable=False)
+    opponent_belt_rank = Column(String(40), nullable=True)
+    count = Column(Integer, nullable=False, default=1)
+    notes = Column(Text, nullable=True)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="submissions")
+    rolling_round = relationship("RollingRound", back_populates="submissions")
 
 
 class Injury(Base):
